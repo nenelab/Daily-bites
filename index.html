@@ -119,6 +119,17 @@
                 </div>
             </div>
 
+            <!-- 기타 항목 (간식, 영양제 등) -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800 flex items-center gap-2">🍪 기타 (간식, 영양제 등)</h2>
+                </div>
+                <div id="etc-inputs" class="space-y-3">
+                    <input type="text" id="etc-food" placeholder="간식, 영양제 이름 (예: 꿀유자청, 유산균)" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="etc-amount" placeholder="먹은 양 (예: 1잔, 1포)" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            </div>
+
             <!-- 저장 및 AI 복사 버튼 영역 -->
             <div class="space-y-2.5">
                 <button onclick="saveData()" class="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-2xl shadow-lg shadow-purple-600/20 transition active:scale-[0.98]">
@@ -243,14 +254,15 @@
                 },
                 dinner: {
                     skipped: document.getElementById('dinner-skip').checked,
-                    food: document.getElementById('dinner-skip').checked ? '' : document.getElementById('dinner-food').value,
+                    food: document.getElementById('dinner-food').value,
                     amount: document.getElementById('dinner-amount').value,
                     rating: getRating('dinner')
+                },
+                etc: {
+                    food: document.getElementById('etc-food').value,
+                    amount: document.getElementById('etc-amount').value
                 }
             };
-            
-            // Correction for dinner food field reference
-            data.dinner.food = document.getElementById('dinner-food').value;
 
             localStorage.setItem(getStorageKey(dateStr), JSON.stringify(data));
             
@@ -272,6 +284,10 @@
                 document.getElementById(`${meal}-inputs`).querySelectorAll('input').forEach(i => i.disabled = false);
             });
 
+            // 기타 항목 초기화
+            document.getElementById('etc-food').value = '';
+            document.getElementById('etc-amount').value = '';
+
             if (saved) {
                 const data = JSON.parse(saved);
                 ['breakfast', 'lunch', 'dinner'].forEach(meal => {
@@ -286,6 +302,11 @@
                         toggleSkip(meal);
                     }
                 });
+
+                if (data.etc) {
+                    document.getElementById('etc-food').value = data.etc.food || '';
+                    document.getElementById('etc-amount').value = data.etc.amount || '';
+                }
             }
         }
 
@@ -315,6 +336,10 @@
             const bInfo = getMealInfo('breakfast', '아침');
             const lInfo = getMealInfo('lunch', '점심');
             const dInfo = getMealInfo('dinner', '저녁');
+            
+            const etcFood = document.getElementById('etc-food').value.trim();
+            const etcAmount = document.getElementById('etc-amount').value.trim();
+            const etcInfo = etcFood ? `- 기타(간식/영양제 등): ${etcFood} ${etcAmount ? '(' + etcAmount + ')' : ''}` : `- 기타(간식/영양제 등): 없음`;
 
             const promptText = `[오늘의 식단 기록 및 분석 요청]
 날짜: ${dateStr}
@@ -322,9 +347,10 @@
 ${bInfo}
 ${lInfo}
 ${dInfo}
+${etcInfo}
 
-위 식단을 바탕으로 다음을 분석해:
-1. 각 식사마다 예상 칼로리 계산하기
+위 식단 및 간식/영양제 내역을 바탕으로 다음을 부탁해:
+1. 각 식사 항목마다 예상 칼로리 및 단백질량 계산하기 (간식/영양제 포함)
 2. 오늘 먹은 총 칼로리 계산하기
 3. 오늘의 식단이 30대 초반 여성의 대사 회복과 혈당 관리에 모범적인지 평가하고 피드백 주기`;
 
@@ -338,7 +364,7 @@ ${dInfo}
         }
 
         function renderSummary() {
-            // 1. 최근 7일 주간 요약 렌더링
+            // 1. 최근 7일 주간 요약 렌더링 (아침, 점심, 저녁만 카운팅, 기타 제외)
             const weeklyContainer = document.getElementById('weekly-stats');
             weeklyContainer.innerHTML = '';
             
