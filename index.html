@@ -132,13 +132,13 @@
                         <span class="text-xs font-medium text-slate-500">간식 평가:</span>
                         <div class="flex gap-1.5 flex-1">
                             <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
-                                <input type="radio" name="dinner-rating" value="맛있음" class="sr-only"> 맛있음
+                                <input type="radio" name="etc-rating" value="맛있음" class="sr-only"> 맛있음
                             </label>
                             <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
-                                <input type="radio" name="dinner-rating" value="무난" class="sr-only"> 무난
+                                <input type="radio" name="etc-rating" value="무난" class="sr-only"> 무난
                             </label>
                             <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
-                                <input type="radio" name="dinner-rating" value="맛없음" class="sr-only"> 맛없음
+                                <input type="radio" name="etc-rating" value="맛없음" class="sr-only"> 맛없음
                             </label>
                         </div>
                     </div>
@@ -162,7 +162,7 @@
             <!-- 주간 요약 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-4">
                 <h2 class="font-bold text-slate-900 text-lg">📅 최근 7일 식사 달성 현황</h2>
-                <p class="text-xs text-slate-500">하루에 《2끼 이상》 챙겨 먹은 날은 정상 식사(성공)로 인정됩니다.</p>
+                <p class="text-xs text-slate-500">하루에 **2끼 이상** 챙겨 먹은 날은 정상 식사(성공)로 인정됩니다.</p>
                 <div id="weekly-stats" class="space-y-3">
                     <!-- JS 동적 생성 -->
                 </div>
@@ -186,7 +186,7 @@
             <!-- 이번 달 맛있음 모아보기 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-4">
                 <h2 class="font-bold text-slate-900 text-lg">💜 이번 달 '맛있음' 식사 모아보기</h2>
-                <p class="text-xs text-slate-500">이번 달 동안 맛있게 즐겼던 식사들입니다.</p>
+                <p class="text-xs text-slate-500">이번 달 동안 맛있게 즐겼던 식사 및 간식들입니다.</p>
                 <div id="monthly-favorites" class="space-y-2">
                     <!-- JS 동적 생성 -->
                 </div>
@@ -275,7 +275,8 @@
                 },
                 etc: {
                     food: document.getElementById('etc-food').value,
-                    amount: document.getElementById('etc-amount').value
+                    amount: document.getElementById('etc-amount').value,
+                    rating: getRating('etc')
                 }
             };
 
@@ -302,6 +303,7 @@
             // 기타 항목 초기화
             document.getElementById('etc-food').value = '';
             document.getElementById('etc-amount').value = '';
+            document.querySelectorAll(`input[name="etc-rating"]`).forEach(r => r.checked = false);
 
             if (saved) {
                 const data = JSON.parse(saved);
@@ -321,6 +323,10 @@
                 if (data.etc) {
                     document.getElementById('etc-food').value = data.etc.food || '';
                     document.getElementById('etc-amount').value = data.etc.amount || '';
+                    if (data.etc.rating) {
+                        const radio = document.querySelector(`input[name="etc-rating"][value="${data.etc.rating}"]`);
+                        if (radio) radio.checked = true;
+                    }
                 }
             }
         }
@@ -354,7 +360,8 @@
             
             const etcFood = document.getElementById('etc-food').value.trim();
             const etcAmount = document.getElementById('etc-amount').value.trim();
-            const etcInfo = etcFood ? `- 기타(간식/영양제 등): ${etcFood} ${etcAmount ? '(' + etcAmount + ')' : ''}` : `- 기타(간식/영양제 등): 없음`;
+            const etcRating = getRating('etc');
+            const etcInfo = etcFood ? `- 기타(간식/영양제 등): ${etcFood} ${etcAmount ? '(' + etcAmount + ')' : ''} [맛 평가: ${etcRating}]` : `- 기타(간식/영양제 등): 없음`;
 
             const promptText = `[오늘의 식단 기록 및 분석 요청]
 날짜: ${dateStr}
@@ -364,8 +371,8 @@ ${lInfo}
 ${dInfo}
 ${etcInfo}
 
-위 식단 및 기타(간식, 영양제 등) 내역을 바탕으로 다음을 부탁해:
-1. 각 식사 항목마다 예상 칼로리 및 단백질량 계산하기 (간식/영양제 포함)
+위 식단 및 간식/영양제 내역을 바탕으로 다음을 부탁해:
+1. 각 식사 항목마다 예상 칼로리 계산하기 (간식/영양제 포함)
 2. 오늘 먹은 총 칼로리 계산하기
 3. 오늘의 식단이 30대 초반 여성의 대사 회복과 혈당 관리에 모범적인지 평가하고 피드백 주기`;
 
@@ -415,7 +422,7 @@ ${etcInfo}
                 weeklyContainer.appendChild(row);
             }
 
-            // 2. 이번 달 요약 및 맛있음 모아보기 렌더링
+            // 2. 이번 달 요약 및 맛있음 모아보기 렌더링 (기타/간식 맛 평가 포함)
             const monthlyFavoritesContainer = document.getElementById('monthly-favorites');
             monthlyFavoritesContainer.innerHTML = '';
             let monthlyFavoriteCount = 0;
@@ -439,14 +446,24 @@ ${etcInfo}
                     const data = JSON.parse(saved);
                     let eatenCount = 0;
 
-                    ['breakfast', 'lunch', 'dinner'].forEach(mealKey => {
+                    // 아침, 점심, 저녁, 기타(간식) 모두 순회하며 '맛있음' 체크 항목 수집
+                    ['breakfast', 'lunch', 'dinner', 'etc'].forEach(mealKey => {
                         const meal = data[mealKey];
-                        if (meal && !meal.skipped && (meal.food.trim() !== '')) {
-                            eatenCount++;
-                            // 이번 달 '맛있음' 식사 수집
+                        if (meal && !meal.skipped && (meal.food && meal.food.trim() !== '')) {
+                            
+                            // 정상 식사 카운팅은 아침, 점심, 저녁만 포함 (기타 제외)
+                            if (mealKey !== 'etc') {
+                                eatenCount++;
+                            }
+
+                            // '맛있음' 식사/간식 수집
                             if (meal.rating === '맛있음') {
                                 monthlyFavoriteCount++;
-                                const mealLabel = mealKey === 'breakfast' ? '☀️ 아침' : (mealKey === 'lunch' ? '☀️ 점심' : '🌙 저녁');
+                                let mealLabel = '☀️ 아침';
+                                if (mealKey === 'lunch') mealLabel = '☀️ 점심';
+                                else if (mealKey === 'dinner') mealLabel = '🌙 저녁';
+                                else if (mealKey === 'etc') mealLabel = '🍪 기타';
+
                                 const favItem = document.createElement('div');
                                 favItem.className = "flex items-center justify-between p-2.5 bg-purple-50/60 rounded-xl border border-purple-100 text-xs";
                                 favItem.innerHTML = `
@@ -468,7 +485,7 @@ ${etcInfo}
             }
 
             if (monthlyFavoriteCount === 0) {
-                monthlyFavoritesContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-3">이번 달에 "맛있음"으로 평가한 식사가 아직 없어요!</p>';
+                monthlyFavoritesContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-3">이번 달에 "맛있음"으로 평가한 식사나 간식이 아직 없어요!</p>';
             }
 
             document.getElementById('monthly-total-days').textContent = `${monthlyTotal}일`;
