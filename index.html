@@ -137,6 +137,15 @@
                 </div>
             </div>
 
+            <!-- 이번 주 맛있음 모아보기 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-4">
+                <h2 class="font-bold text-slate-900 text-lg">💜 이번 주 '맛있음' 식사 모아보기</h2>
+                <p class="text-xs text-slate-500">최근 7일 동안 맛있게 즐겼던 식사들입니다.</p>
+                <div id="weekly-favorites" class="space-y-2">
+                    <!-- JS 동적 생성 -->
+                </div>
+            </div>
+
             <!-- 월간 요약 -->
             <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-4">
                 <h2 class="font-bold text-slate-900 text-lg">📊 이번 달 요약</h2>
@@ -276,6 +285,10 @@
             const weeklyContainer = document.getElementById('weekly-stats');
             weeklyContainer.innerHTML = '';
             
+            const favoritesContainer = document.getElementById('weekly-favorites');
+            favoritesContainer.innerHTML = '';
+            let favoriteCount = 0;
+            
             let monthlyTotal = 0;
             let monthlySuccess = 0;
             const currentMonthPrefix = new Date().toISOString().slice(0, 7);
@@ -290,9 +303,25 @@
 
                 if (saved) {
                     const data = JSON.parse(saved);
-                    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
-                        if (data[meal] && !data[meal].skipped && (data[meal].food.trim() !== '')) {
+                    ['breakfast', 'lunch', 'dinner'].forEach(mealKey => {
+                        const meal = data[mealKey];
+                        if (meal && !meal.skipped && (meal.food.trim() !== '')) {
                             eatenCount++;
+                            // 맛있음으로 체크된 항목 모으기
+                            if (meal.rating === '맛있음') {
+                                favoriteCount++;
+                                const mealLabel = mealKey === 'breakfast' ? '☀️ 아침' : (mealKey === 'lunch' ? '☀️ 점심' : '🌙 저녁');
+                                const favItem = document.createElement('div');
+                                favItem.className = "flex items-center justify-between p-2.5 bg-purple-50/60 rounded-xl border border-purple-100 text-xs";
+                                favItem.innerHTML = `
+                                    <div>
+                                        <span class="font-semibold text-purple-900">${dateStr} (${mealLabel})</span>
+                                        <span class="text-slate-600 ml-2">${meal.food} ${meal.amount ? '(' + meal.amount + ')' : ''}</span>
+                                    </div>
+                                    <span class="px-2 py-0.5 bg-purple-200 text-purple-800 font-medium rounded-full">😋 맛있음</span>
+                                `;
+                                favoritesContainer.appendChild(favItem);
+                            }
                         }
                     });
                 }
@@ -313,6 +342,10 @@
                 weeklyContainer.appendChild(row);
             }
 
+            if (favoriteCount === 0) {
+                favoritesContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-3">이번 주에 "맛있음"으로 평가한 식사가 아직 없어요!</p>';
+            }
+
             for (let i = 0; i < 31; i++) {
                 const d = new Date();
                 d.setDate(d.getDate() - i);
@@ -323,8 +356,9 @@
                         monthlyTotal++;
                         const data = JSON.parse(saved);
                         let eatenCount = 0;
-                        ['breakfast', 'lunch', 'dinner'].forEach(meal => {
-                            if (data[meal] && !data[meal].skipped && (data[meal].food.trim() !== '')) {
+                        ['breakfast', 'lunch', 'dinner'].forEach(mealKey => {
+                            const meal = data[mealKey];
+                            if (meal && !meal.skipped && (meal.food.trim() !== '')) {
                                 eatenCount++;
                             }
                         });
