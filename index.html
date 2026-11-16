@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 식단 기록 트래커</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-purple-50/40 text-slate-800 min-h-screen pb-12">
+    <div class="max-w-md mx-auto px-4 py-6">
+        <!-- 헤더 -->
+        <header class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-purple-900">💜 나만의 식단 기록 트래커</h1>
+            <p class="text-sm text-slate-500 mt-1">로그인 없이 내 폰에 안전하게 저장됩니다 (2끼 이상 성공 인정)</p>
+        </header>
+
+        <!-- 탭 네비게이션 -->
+        <div class="flex rounded-xl bg-purple-100/60 p-1 mb-6 shadow-inner">
+            <button onclick="switchTab('daily')" id="tab-daily" class="flex-1 py-2 text-sm font-semibold rounded-lg bg-white shadow text-purple-700 transition">매일 기록</button>
+            <button onclick="switchTab('summary')" id="tab-summary" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-600 transition">주간/월간 요약</button>
+            <button onclick="switchTab('backup')" id="tab-backup" class="flex-1 py-2 text-sm font-semibold rounded-lg text-slate-600 transition">데이터 관리</button>
+        </div>
+
+        <!-- 1. 매일 기록 탭 -->
+        <div id="view-daily" class="space-y-6">
+            <!-- 날짜 선택 -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-purple-100 flex items-center justify-between">
+                <label for="record-date" class="font-medium text-slate-700">기록 날짜</label>
+                <input type="date" id="record-date" onchange="loadDateData()" class="px-3 py-1.5 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 text-purple-900 font-medium">
+            </div>
+
+            <!-- 아침 식사 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800 flex items-center gap-2">☀️ 아침 식사</h2>
+                    <label class="flex items-center gap-1.5 text-sm text-slate-500 cursor-pointer">
+                        <input type="checkbox" id="breakfast-skip" onchange="toggleSkip('breakfast')" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4">
+                        안 먹음 (거름)
+                    </label>
+                </div>
+                <div id="breakfast-inputs" class="space-y-3">
+                    <input type="text" id="breakfast-food" placeholder="먹은 음식 이름 (예: 쌀밥, 계란후라이)" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="breakfast-amount" placeholder="먹은 양 (예: 1공기, 반 개)" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <!-- 맛 평가 -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <span class="text-xs font-medium text-slate-500">식사 평가:</span>
+                        <div class="flex gap-1.5 flex-1">
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="breakfast-rating" value="맛있음" class="sr-only"> 맛있음
+                            </label>
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="breakfast-rating" value="무난" class="sr-only"> 무난
+                            </label>
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="breakfast-rating" value="맛없음" class="sr-only"> 맛없음
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 점심 식사 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800 flex items-center gap-2">☀️ 점심 식사</h2>
+                    <label class="flex items-center gap-1.5 text-sm text-slate-500 cursor-pointer">
+                        <input type="checkbox" id="lunch-skip" onchange="toggleSkip('lunch')" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4">
+                        안 먹음 (거름)
+                    </label>
+                </div>
+                <div id="lunch-inputs" class="space-y-3">
+                    <input type="text" id="lunch-food" placeholder="먹은 음식 이름" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="lunch-amount" placeholder="먹은 양" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <!-- 맛 평가 -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <span class="text-xs font-medium text-slate-500">식사 평가:</span>
+                        <div class="flex gap-1.5 flex-1">
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="lunch-rating" value="맛있음" class="sr-only"> 맛있음
+                            </label>
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="lunch-rating" value="무난" class="sr-only"> 무난
+                            </label>
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="lunch-rating" value="맛없음" class="sr-only"> 맛없음
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 저녁 식사 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-3">
+                <div class="flex justify-between items-center">
+                    <h2 class="font-bold text-slate-800 flex items-center gap-2">🌙 저녁 식사</h2>
+                    <label class="flex items-center gap-1.5 text-sm text-slate-500 cursor-pointer">
+                        <input type="checkbox" id="dinner-skip" onchange="toggleSkip('dinner')" class="rounded text-purple-600 focus:ring-purple-500 w-4 h-4">
+                        안 먹음 (거름)
+                    </label>
+                </div>
+                <div id="dinner-inputs" class="space-y-3">
+                    <input type="text" id="dinner-food" placeholder="먹은 음식 이름" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="text" id="dinner-amount" placeholder="먹은 양" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <!-- 맛 평가 -->
+                    <div class="flex items-center gap-2 pt-1">
+                        <span class="text-xs font-medium text-slate-500">식사 평가:</span>
+                        <div class="flex gap-1.5 flex-1">
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="dinner-rating" value="맛있음" class="sr-only"> 맛있음
+                            </label>
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="dinner-rating" value="무난" class="sr-only"> 무난
+                            </label>
+                            <label class="flex-1 text-center py-1.5 text-xs font-medium rounded-lg border border-slate-200 cursor-pointer transition has-[:checked]:bg-purple-100 has-[:checked]:text-purple-700 has-[:checked]:border-purple-300 hover:bg-slate-50">
+                                <input type="radio" name="dinner-rating" value="맛없음" class="sr-only"> 맛없음
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 저장 버튼 -->
+            <button onclick="saveData()" class="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-2xl shadow-lg shadow-purple-600/20 transition active:scale-[0.98]">
+                기록 저장하기 ✨
+            </button>
+            <div id="save-alert" class="text-center text-xs text-purple-600 font-medium h-4"></div>
+        </div>
+
+        <!-- 2. 주간/월간 요약 탭 -->
+        <div id="view-summary" class="hidden space-y-6">
+            <!-- 주간 요약 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-4">
+                <h2 class="font-bold text-slate-900 text-lg">📅 최근 7일 식사 달성 현황</h2>
+                <p class="text-xs text-slate-500">하루에 **2끼 이상** 챙겨 먹은 날은 정상 식사(성공)로 인정됩니다.</p>
+                <div id="weekly-stats" class="space-y-3">
+                    <!-- JS 동적 생성 -->
+                </div>
+            </div>
+
+            <!-- 월간 요약 -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-4">
+                <h2 class="font-bold text-slate-900 text-lg">📊 이번 달 요약</h2>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <div class="text-xs text-slate-500 mb-1">기록한 전체 일수</div>
+                        <div id="monthly-total-days" class="text-xl font-bold text-slate-800">0일</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                        <div class="text-xs text-purple-600 mb-1">2끼 이상 정상 식사</div>
+                        <div id="monthly-success-days" class="text-xl font-bold text-purple-700">0일</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 데이터 관리 탭 -->
+        <div id="view-backup" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 space-y-4">
+                <h2 class="font-bold text-slate-900 text-lg">💾 데이터 백업 및 복원</h2>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    브라우저 캐시가 삭제되거나 기기를 변경할 때 대비하여 기록을 파일로 백업해 둘 수 있습니다.
+                </p>
+                
+                <div class="space-y-3 pt-2">
+                    <button onclick="exportData()" class="w-full py-3 bg-purple-900 hover:bg-slate-900 text-white font-medium rounded-xl text-sm transition">
+                        기록 백업 파일 다운로드 (.json)
+                    </button>
+                    
+                    <div class="relative">
+                        <input type="file" id="import-file" accept=".json" onchange="importData(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                        <button class="w-full py-3 bg-white border border-purple-200 hover:bg-purple-50 text-purple-900 font-medium rounded-xl text-sm transition text-center">
+                            백업 파일 불러오기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('record-date').valueAsDate = new Date();
+        loadDateData();
+
+        function switchTab(tabName) {
+            ['daily', 'summary', 'backup'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tabName);
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabName) {
+                    btn.className = "flex-1 py-2 text-sm font-semibold rounded-lg bg-white shadow text-purple-700 transition";
+                } else {
+                    btn.className = "flex-1 py-2 text-sm font-semibold rounded-lg text-slate-600 transition";
+                }
+            });
+            if (tabName === 'summary') renderSummary();
+        }
+
+        function toggleSkip(meal) {
+            const isSkipped = document.getElementById(`${meal}-skip`).checked;
+            const container = document.getElementById(`${meal}-inputs`);
+            container.style.opacity = isSkipped ? '0.4' : '1';
+            container.querySelectorAll('input').forEach(input => input.disabled = isSkipped);
+        }
+
+        function getStorageKey(dateStr) {
+            return `meal_tracker_${dateStr}`;
+        }
+
+        function saveData() {
+            const dateStr = document.getElementById('record-date').value;
+            if (!dateStr) return;
+
+            const getRating = (meal) => {
+                const checked = document.querySelector(`input[name="${meal}-rating"]:checked`);
+                return checked ? checked.value : '';
+            };
+
+            const data = {
+                breakfast: {
+                    skipped: document.getElementById('breakfast-skip').checked,
+                    food: document.getElementById('breakfast-food').value,
+                    amount: document.getElementById('breakfast-amount').value,
+                    rating: getRating('breakfast')
+                },
+                lunch: {
+                    skipped: document.getElementById('lunch-skip').checked,
+                    food: document.getElementById('lunch-food').value,
+                    amount: document.getElementById('lunch-amount').value,
+                    rating: getRating('lunch')
+                },
+                dinner: {
+                    skipped: document.getElementById('dinner-skip').checked,
+                    food: document.getElementById('dinner-food').value,
+                    amount: document.getElementById('dinner-amount').value,
+                    rating: getRating('dinner')
+                }
+            };
+
+            localStorage.setItem(getStorageKey(dateStr), JSON.stringify(data));
+            
+            const alertBox = document.getElementById('save-alert');
+            alertBox.textContent = "성공적으로 저장되었습니다! ✨";
+            setTimeout(() => alertBox.textContent = "", 2500);
+        }
+
+        function loadDateData() {
+            const dateStr = document.getElementById('record-date').value;
+            const saved = localStorage.getItem(getStorageKey(dateStr));
+
+            ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+                document.getElementById(`${meal}-skip`).checked = false;
+                document.getElementById(`${meal}-food`).value = '';
+                document.getElementById(`${meal}-amount`).value = '';
+                document.querySelectorAll(`input[name="${meal}-rating"]`).forEach(r => r.checked = false);
+                document.getElementById(`${meal}-inputs`).style.opacity = '1';
+                document.getElementById(`${meal}-inputs`).querySelectorAll('input').forEach(i => i.disabled = false);
+            });
+
+            if (saved) {
+                const data = JSON.parse(saved);
+                ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+                    if (data[meal]) {
+                        document.getElementById(`${meal}-skip`).checked = data[meal].skipped;
+                        document.getElementById(`${meal}-food`).value = data[meal].food || '';
+                        document.getElementById(`${meal}-amount`).value = data[meal].amount || '';
+                        if (data[meal].rating) {
+                            const radio = document.querySelector(`input[name="${meal}-rating"][value="${data[meal].rating}"]`);
+                            if (radio) radio.checked = true;
+                        }
+                        toggleSkip(meal);
+                    }
+                });
+            }
+        }
+
+        function renderSummary() {
+            const weeklyContainer = document.getElementById('weekly-stats');
+            weeklyContainer.innerHTML = '';
+            
+            let monthlyTotal = 0;
+            let monthlySuccess = 0;
+            const currentMonthPrefix = new Date().toISOString().slice(0, 7);
+
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                const saved = localStorage.getItem(getStorageKey(dateStr));
+
+                let eatenCount = 0;
+
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+                        if (data[meal] && !data[meal].skipped && (data[meal].food.trim() !== '')) {
+                            eatenCount++;
+                        }
+                    });
+                }
+
+                const isSuccess = eatenCount >= 2;
+
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-3 bg-purple-50/50 rounded-xl border border-purple-100 text-sm";
+                row.innerHTML = `
+                    <span class="font-medium text-slate-700">${dateStr}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-500">${eatenCount}끼 섭취</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${isSuccess ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'}">
+                            ${isSuccess ? '정상 식사 (성공)' : '부족/결측'}
+                        </span>
+                    </div>
+                `;
+                weeklyContainer.appendChild(row);
+            }
+
+            for (let i = 0; i < 31; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                if (dateStr.startsWith(currentMonthPrefix)) {
+                    const saved = localStorage.getItem(getStorageKey(dateStr));
+                    if (saved) {
+                        monthlyTotal++;
+                        const data = JSON.parse(saved);
+                        let eatenCount = 0;
+                        ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+                            if (data[meal] && !data[meal].skipped && (data[meal].food.trim() !== '')) {
+                                eatenCount++;
+                            }
+                        });
+                        if (eatenCount >= 2) monthlySuccess++;
+                    }
+                }
+            }
+
+            document.getElementById('monthly-total-days').textContent = `${monthlyTotal}일`;
+            document.getElementById('monthly-success-days').textContent = `${monthlySuccess}일`;
+        }
+
+        function exportData() {
+            const allData = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('meal_tracker_')) {
+                    allData[key] = localStorage.getItem(key);
+                }
+            }
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `meal_tracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const allData = JSON.parse(e.target.result);
+                    for (const key in allData) {
+                        if (key.startsWith('meal_tracker_')) {
+                            localStorage.setItem(key, allData[key]);
+                        }
+                    }
+                    alert('백업 데이터가 성공적으로 복원되었습니다! ✨');
+                    loadDateData();
+                } catch (err) {
+                    alert('유효하지 않은 백업 파일입니다.');
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
